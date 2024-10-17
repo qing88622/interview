@@ -3,9 +3,10 @@
     <div class="full-width q-px-xl">
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
-        <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
+        <q-input v-model="tempData.age" label="年齡" type="number"/>
+        <q-btn color="primary" class="q-mt-md" @click="handleSubmit">{{ isEdit?'儲存編輯':'新增' }}</q-btn>
       </div>
+      {{ isEdit }}
 
       <q-table
         flat
@@ -81,17 +82,33 @@
 import axios from 'axios';
 import { QTableProps } from 'quasar';
 import { ref } from 'vue';
+// const testApi = ref("data")
+// const fetchData = async () => {
+//   try {
+//     const response = await axios.get('/crudTest'); 
+//     testApi.value = response.data; 
+//     // error.value = null; 
+//   } catch (err) {
+//     console.error(err)
+//   }
+// };
+
+// fetchData()
+let isEdit =ref(false)
 interface btnType {
   label: string;
   icon: string;
   status: string;
 }
+
 const blockData = ref([
   {
+    id: 1,
     name: 'test',
     age: 25,
   },
 ]);
+
 const tableConfig = ref([
   {
     label: '姓名',
@@ -106,6 +123,7 @@ const tableConfig = ref([
     align: 'left',
   },
 ]);
+
 const tableButtons = ref([
   {
     label: '編輯',
@@ -123,8 +141,43 @@ const tempData = ref({
   name: '',
   age: '',
 });
+
+function generateUniqueId() {
+  return Date.now() + '-' + Math.floor(Math.random() * 10000);
+}
+
 function handleClickOption(btn, data) {
-  // ...
+  if (btn.status === 'edit') {
+    isEdit.value=true
+    tempData.value = JSON.parse(JSON.stringify(data))
+  } else if (btn.status === 'delete') {
+    const index = blockData.value.indexOf(data)
+    blockData.value.splice(index,1)
+  }
+}
+
+const handleSubmit=()=> {
+  if (!tempData.value.name || !tempData.value.age) {
+    alert('姓名和年齡不能為空！')
+    return; // 如果有任何一項為空，則不執行後續操作
+  }
+  if (isEdit.value) {
+    
+    const index = blockData.value.findIndex(item=>item.id===tempData.value.id) //找到相同id
+    if (index !== -1) { 
+
+      blockData.value[index] = tempData.value;
+      isEdit.value = false;
+    } else {
+      console.error("未找到對應的編輯資料");
+    }
+  } else {
+    blockData.value.push({...tempData.value,id:generateUniqueId()})
+    tempData.value={
+      name: '',
+      age: '',
+    }
+  }
 }
 </script>
 
